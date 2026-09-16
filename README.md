@@ -7,7 +7,7 @@
 
 ---
 
-## 🌟 What is GökAI?
+##  What is GökAI?
 
 **GökAI** is a standalone, fully autonomous multi-agent AI software engineering platform. It transforms natural language objectives into verified, production-grade codebases by orchestrating specialized AI agents across the entire software development lifecycle:
 
@@ -18,12 +18,10 @@
 5. **Security & Vulnerability Auditing**: Automatically inspects source code for hardcoded secrets, injection vectors, and OWASP vulnerabilities.
 6. **Delivery & Package Export**: Bundles deliverables into clean, exportable ZIP archives.
 
-### 🛑 100% Independent Runtime
-GökAI is **100% runtime-independent of Google Antigravity or any external proprietary IDE**. It operates completely standalone on Windows, macOS, and Linux.
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 ```text
                                ┌───────────────────────────────┐
@@ -80,7 +78,7 @@ GökAI is **100% runtime-independent of Google Antigravity or any external propr
 
 ---
 
-## ⚡ Core Features
+##  Core Features
 
 - **Multi-Agent DAG Orchestrator**: Automatically translates ambiguous user prompts into verifiable task steps with dependency resolution.
 - **Self-Healing Debugger**: If tests fail, the Debugger Agent analyzes the traceback, inspects the source code, and writes a targeted fix before re-running the test suite.
@@ -103,7 +101,7 @@ GökAI is **100% runtime-independent of Google Antigravity or any external propr
 
 ---
 
-## 🚀 One-Click Quick Start
+##  One-Click Quick Start
 
 ### Windows
 Double-click:
@@ -128,7 +126,7 @@ chmod +x run-linux.sh
 
 ---
 
-## 🛠️ Manual Development Setup
+##  Manual Development Setup
 
 If you prefer to start the servers manually:
 
@@ -161,25 +159,25 @@ npm run dev -- --port 3000
 
 ---
 
-## 🔑 AI Provider Configuration
+##  AI Provider Configuration
 
-GökAI supports multiple cloud AI model providers. You only need **one** active provider key to use the platform:
+GökAI supports multiple cloud AI model providers. You only need **one** active provider key to use the platform:, , 
 
 | Provider | Environment Variable | Default Model | Supported Models |
 | :--- | :--- | :--- | :--- |
 | **Google Gemini** | `GEMINI_API_KEY` | `gemini-2.5-flash` | `gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-pro` |
 | **OpenAI** | `OPENAI_API_KEY` | `gpt-4o-mini` | `gpt-4o-mini`, `gpt-4o`, `o1-mini`, `o3-mini` |
-| **Anthropic Claude** | `ANTHROPIC_API_KEY` | `claude-3-5-sonnet-20241022` | `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022` |
+| **Anthropic Claude** | `ANTHROPIC_API_KEY` | `claude-3-5-sonnet` | ` claude-3-5-sonnet`, `claude-3-5-haiku` |
 | **DeepSeek** | `DEEPSEEK_API_KEY` | `deepseek-chat` | `deepseek-chat`, `deepseek-reasoner` |
 | **NVIDIA NIM** | `NVIDIA_API_KEY` | `meta/llama-3.1-70b-instruct` | `meta/llama-3.1-70b-instruct`, `meta/llama-3.3-70b-instruct` |
 | **OpenRouter** | `OPENROUTER_API_KEY` | `meta-llama/llama-3.3-70b-instruct` | Multiple community & commercial models |
-| **Internal Mock** | *(None required)* | `mock-engineer-v1` | Deterministic offline model for local test runs & CI |
+| **Internal Mock** | *(None required)* | `local-mock` | Deterministic offline model for local test runs & CI |
 
-> 🔒 **Security Notice**: Never commit real API keys into git. All keys in `.env.example` and repository code are safe empty placeholders. You can securely enter, test, and save your API keys directly from the **Settings** screen in the Web UI.
+>  **Security Notice**: Never commit real API keys into git. All keys in `.env.example` and repository code are safe empty placeholders. You can securely enter, test, and save your API keys directly from the **Settings** screen in the Web UI.
 
 ---
 
-## 🧠 Domain Skills System
+##  Domain Skills System
 
 Skills provide modular domain engineering knowledge to agents during code generation:
 - **Built-in Skills**: Shipped core guidelines (`python`, `fastapi`, `react`, `security`).
@@ -188,7 +186,7 @@ Skills provide modular domain engineering knowledge to agents during code genera
 
 ---
 
-## 🛡️ Security & Sandboxing
+##  Security & Sandboxing
 
 GökAI executes generated code using defense-in-depth isolation:
 - **JailedFileSystem**: Restricts all file reads, writes, edits, and deletions strictly inside the project's sandbox directory (`gokai/projects/{project_id}/`). Attempts to traverse directories (`../`) or access host operating system roots are immediately blocked.
@@ -197,13 +195,13 @@ GökAI executes generated code using defense-in-depth isolation:
 
 ---
 
-## 📦 Project Export
+##  Project Export
 
 Every generated workspace can be exported as a standalone ZIP bundle from the **Projects & Files** tab. The export includes all source code, unit tests, configurations, and documentation created during the autonomous engineering cycle.
 
 ---
 
-## 🗺️ Roadmap
+##  Roadmap
 
 - [x] **V1.0.0**: Autonomous multi-agent pipeline, self-healing debugger, AI chat, skills manager, multi-provider model routing, cross-platform launchers.
 - [ ] **V1.1.0**: Git branch & pull request integration for GitHub and GitLab.
@@ -212,6 +210,6 @@ Every generated workspace can be exported as a standalone ZIP bundle from the **
 
 ---
 
-## 📄 License
+##  License
 
 GökAI is released under the **MIT License**.
