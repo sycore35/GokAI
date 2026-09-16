@@ -1,0 +1,22 @@
+# GÖKAI Test Execution Report
+- Status: PASSED
+- Exit Code: 0
+- Duration: 547.5ms
+
+## STDOUT
+```
+============================= test session starts =============================
+platform -- Python 3.x, pytest, pluggy
+cachedir: .pytest_cache
+rootdir: projects/calculator_cli_project
+collecting ... collected 2 items
+
+test_calculator.py::test_calculator_operations PASSED                    [ 50%]
+test_calculator.py::test_divide_by_zero PASSED                           [100%]
+
+============================== 2 passed in 0.04s ==============================
+```
+
+## STDERR
+```
+```

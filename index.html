@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GÖKAI — Autonomous AI Engineering Platform (Preview)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            display: ['Space Grotesk', 'sans-serif']
+          },
+          colors: {
+            brand: {
+              cyan: '#06B6D4',
+              blue: '#3B82F6',
+              dark: '#090D16',
+              card: '#0B1120',
+              border: '#1E293B',
+              hover: '#1E293B80'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #090D16;
+      color: #F8FAFC;
+      font-family: 'Inter', sans-serif;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090D16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E293B;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+    .glow-cyan {
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
+    }
+    .glow-blue {
+      box-shadow: 0 0 25px rgba(59, 130, 246, 0.2);
+    }
+    .code-editor {
+      font-family: 'JetBrains Mono', monospace;
+      tab-size: 2;
+    }
+  </style>
+</head>
+<body class="bg-[#090D16] text-[#F8FAFC] antialiased flex flex-col h-screen overflow-hidden select-none">
+
+  <!-- ================= TOP NAVIGATION HEADER ================= -->
+  <header class="h-16 border-b border-[#1E293B] bg-[#0B1120]/90 backdrop-blur px-6 flex items-center justify-between shrink-0 z-20">
+    <div class="flex items-center gap-4">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-extrabold text-white text-lg glow-cyan shadow-lg">
+        G
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-display font-bold text-base tracking-wider text-white">GÖKAI</span>
+          <span class="px-2 py-0.5 text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full tracking-wide">
+            SOFTWARE FACTORY MVP
+          </span>
+          <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full">
+            LIVE DEMO / PREVIEW
+          </span>
+        </div>
+        <div class="text-[10px] text-slate-500 tracking-wider uppercase font-semibold">GÖK SYSTEMS TECH &bull; AUTONOMOUS PLATFORM</div>
+      </div>
+    </div>
+
+    <!-- Active Workspace Selector -->
+    <div class="flex items-center gap-3 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
+      <span class="text-xs text-slate-400 font-medium">Aktif Proje:</span>
+      <select id="projectSelector" onchange="switchProject(this.value)" class="bg-slate-950 text-cyan-400 border border-slate-700 rounded px-2.5 py-1 text-xs font-semibold focus:outline-none focus:border-cyan-500 cursor-pointer">
+        <option value="calculator">calculator_cli_project (Python CLI)</option>
+        <option value="fastapi_todo">fastapi_todo_project (FastAPI REST)</option>
+        <option value="react_dashboard">react_dashboard_project (React 19 + Vite)</option>
+      </select>
+    </div>
+
+    <!-- Real-time Health Diagnostics -->
+    <div class="flex items-center gap-5 text-xs text-slate-400">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>DB: <strong class="text-slate-200">SQLite Connected</strong></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span>AI: <strong class="text-slate-200">Gemini 2.5 / Mock</strong></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+        <span>Sandbox: <strong class="text-slate-200">Jailed Process</strong></span>
+      </div>
+      <a href="javascript:void(0)" onclick="openBackendLink()" class="px-3 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-md text-xs font-semibold transition">
+        API: :8000
+      </a>
+    </div>
+  </header>
+
+  <!-- ================= MAIN LAYOUT ================= -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="w-60 border-r border-[#1E293B] bg-[#0B1120] p-3 flex flex-col justify-between shrink-0">
+      <div class="space-y-1">
+        <div class="px-3 py-2 text-[10px] font-bold text-slate-500 tracking-wider uppercase">Platform Modülleri</div>
+        
+        <button onclick="setTab('dashboard')" id="btn-dashboard" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          <span>Dashboard</span>
+        </button>
+
+        <button onclick="setTab('projects')" id="btn-projects" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+          <span>Projeler & Kod</span>
+          <span class="ml-auto text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">3</span>
+        </button>
+
+        <button onclick="setTab('tasks')" id="btn-tasks" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          <span>Görevler & Terminal</span>
+          <span class="ml-auto text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono">Live</span>
+        </button>
+
+        <button onclick="setTab('agents')" id="btn-agents" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          <span>Agent Kadrosu</span>
+          <span class="ml-auto text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-cyan-400">7</span>
+        </button>
+
+        <button onclick="setTab('skills')" id="btn-skills" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          <span>Yetenekler (Skills)</span>
+          <span class="ml-auto text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">6</span>
+        </button>
+
+        <button onclick="setTab('memory')" id="btn-memory" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          <span>Hafıza (4-Tier)</span>
+        </button>
+
+        <button onclick="setTab('activity')" id="btn-activity" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Aktivite Geçmişi</span>
+        </button>
+
+        <button onclick="setTab('settings')" id="btn-settings" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span>Sistem Ayarları</span>
+        </button>
+      </div>
+
+      <!-- Autonomous Agent Cycle Meter -->
+      <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-xs">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-slate-400 font-medium">Self-Healing Loop</span>
+          <span class="text-emerald-400 font-bold font-mono">Max 5 Döngü</span>
+        </div>
+        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+          <div class="bg-gradient-to-r from-cyan-500 to-emerald-400 h-full w-4/5 rounded-full"></div>
+        </div>
+        <div class="mt-2 text-[10px] text-slate-500 flex justify-between">
+          <span>Sandbox: Jailed</span>
+          <span class="text-slate-400">Zero Antigravity Dep</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CONTENT BODY (SWITCHABLE VIEWS) -->
+    <main class="flex-1 overflow-y-auto p-6 bg-[#090D16]">
+
+      <!-- ================= TAB 1: DASHBOARD ================= -->
+      <div id="view-dashboard" class="space-y-6">
+        
+        <!-- Metrics Ribbon -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-400 font-medium">Aktif Uzman Agent'lar</div>
+              <div class="text-2xl font-bold font-display text-white mt-1">7 / 7 Online</div>
+              <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
+                <span>●</span> Dev, Test, Debug, Sec, Rev hazır
+              </div>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+              ⚡
+            </div>
+          </div>
+
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-400 font-medium">Tamamlanan Görevler</div>
+              <div class="text-2xl font-bold font-display text-white mt-1">3 Görev</div>
+              <div class="text-[11px] text-cyan-400 mt-1">
+                %100 Test Başarısı (19/19)
+              </div>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+              ✓
+            </div>
+          </div>
+
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-400 font-medium">Workspace İzolasyonu</div>
+              <div class="text-2xl font-bold font-display text-white mt-1">Jailed FS</div>
+              <div class="text-[11px] text-slate-400 mt-1">
+                Path Traversal Korumalı
+              </div>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+              🛡️
+            </div>
+          </div>
+
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-400 font-medium">Kullanılan Token / Maliyet</div>
+              <div class="text-2xl font-bold font-display text-white mt-1">2,840 tk</div>
+              <div class="text-[11px] text-emerald-400 mt-1">
+                ~$0.0042 Est. (Bütçe İçi)
+              </div>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              📊
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Architecture Pipeline -->
+        <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div class="text-sm font-bold font-display text-white flex items-center gap-2">
+              <span>GÖKAI E2E Mimari Otonom Pipeline</span>
+              <span class="text-[10px] text-cyan-400 font-mono bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800">Tam Gerçek Akış</span>
+            </div>
+            <span class="text-xs text-slate-400">Tüm adımlar gerçek backend state'i ile eşleşir</span>
+          </div>
+
+          <div class="flex items-center justify-between overflow-x-auto py-2 px-1 text-center text-xs font-semibold">
+            <div class="flex flex-col items-center min-w-[90px]">
+              <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 mb-1.5 shadow">👤</div>
+              <span class="text-slate-300">USER</span>
+            </div>
+            <span class="text-slate-600 font-bold">→</span>
+            <div class="flex flex-col items-center min-w-[90px]">
+              <div class="w-10 h-10 rounded-full bg-blue-950 border border-blue-600 flex items-center justify-center text-blue-400 mb-1.5 shadow">🌐</div>
+              <span class="text-blue-300">WEB UI</span>
+            </div>
+            <span class="text-slate-600 font-bold">→</span>
+            <div class="flex flex-col items-center min-w-[90px]">
+              <div class="w-10 h-10 rounded-full bg-cyan-950 border border-cyan-500 flex items-center justify-center text-cyan-300 mb-1.5 glow-cyan">⚡</div>
+              <span class="text-cyan-300">ORCHESTRATOR</span>
+            </div>
+            <span class="text-slate-600 font-bold">→</span>
+            <div class="flex flex-col items-center min-w-[90px]">
+              <div class="w-10 h-10 rounded-full bg-emerald-950 border border-emerald-500 flex items-center justify-center text-emerald-300 mb-1.5">💻</div>
+              <span class="text-emerald-300">DEVELOPER</span>
+            </div>
+            <span class="text-slate-600 font-bold">→</span>
+            <div class="flex flex-col items-center min-w-[90px]">
+              <div class="w-10 h-10 rounded-full bg-amber-950 border border-amber-500 flex items-center justify-center text-amber-300 mb-1.5">📁</div>
+              <span class="text-amber-300">JAILED FS</span>
+            </div>
+            <span class="text-slate-600 font-bold">→</span>
+            <div class="flex flex-col items-center min-w-[90px]">
+              <div class="w-10 h-10 rounded-full bg-slate-900 border border-emerald-400 flex items-center justify-center text-emerald-400 mb-1.5 font-mono">_></div>
+              <span class="text-emerald-300">TESTER</span>
+            </div>
+            <span class="text-slate-600 font-bold">→</span>
+            <div class="flex flex-col items-center min-w-[90px]">
+              <div class="w-10 h-10 rounded-full bg-rose-950 border border-rose-500 flex items-center justify-center text-rose-300 mb-1.5">🔧</div>
+              <span class="text-rose-300">DEBUGGER</span>
+            </div>
+            <span class="text-slate-600 font-bold">→</span>
+            <div class="flex flex-col items-center min-w-[90px]">
+              <div class="w-10 h-10 rounded-full bg-purple-950 border border-purple-500 flex items-center justify-center text-purple-300 mb-1.5">🛡️</div>
+              <span class="text-purple-300">SECURITY</span>
+            </div>
+            <span class="text-slate-600 font-bold">→</span>
+            <div class="flex flex-col items-center min-w-[90px]">
+              <div class="w-10 h-10 rounded-full bg-indigo-950 border border-indigo-500 flex items-center justify-center text-indigo-300 mb-1.5">📋</div>
+              <span class="text-indigo-300">REVIEWER</span>
+            </div>
+            <span class="text-slate-600 font-bold">→</span>
+            <div class="flex flex-col items-center min-w-[90px]">
+              <div class="w-10 h-10 rounded-full bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center text-emerald-200 mb-1.5 shadow-lg">✓</div>
+              <span class="text-emerald-400">DELIVERY</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Creation & Simulator Panel -->
+        <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-6">
+          <div class="text-sm font-bold font-display text-white mb-2">Yeni Otonom Görev Başlat (Autonomous Objective)</div>
+          <p class="text-xs text-slate-400 mb-4">GökAI doğal dildeki talimatı alır, planlar, kodlar, izole ortamda test eder, hataları kendi onarır ve doğrular.</p>
+
+          <div class="space-y-3">
+            <textarea id="taskPromptInput" rows="3" class="w-full bg-[#090D16] border border-[#1E293B] rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 transition font-mono" placeholder="Örn: Create a Python calculator CLI application with unit tests..."></textarea>
+
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-500 font-medium">Hızlı Örnekler:</span>
+                <button onclick="fillPrompt('Create a Python calculator CLI application with comprehensive unit tests.')" class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition">
+                  🧮 Python Calculator CLI
+                </button>
+                <button onclick="fillPrompt('Create a small FastAPI TODO API with full CRUD endpoints and unit tests.')" class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition">
+                  ⚡ FastAPI TODO REST API
+                </button>
+                <button onclick="fillPrompt('Create a modern React analytics dashboard component with test suite.')" class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition">
+                  ⚛️ React Analytics Dashboard
+                </button>
+              </div>
+
+              <button onclick="runAutonomousSimulation()" id="dispatchBtn" class="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs rounded-lg transition flex items-center gap-2 shadow-lg glow-cyan">
+                <span>🚀 Görevi Başlat (Dispatch)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Simulation Feedback Console -->
+          <div id="simConsole" class="mt-5 bg-[#070A10] border border-slate-800 rounded-lg p-4 font-mono text-xs hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
+              <div class="flex items-center gap-2 text-cyan-400 font-bold">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                <span>GERÇEK ZAMANLI SSE / ORCHESTRATOR AKIŞI</span>
+              </div>
+              <span id="simStatusBadge" class="px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30">PLANNING</span>
+            </div>
+            <div id="simLogList" class="space-y-1.5 text-slate-300 max-h-48 overflow-y-auto">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Tasks List -->
+        <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div class="text-sm font-bold font-display text-white">Son Çalıştırılan Görevler</div>
+            <button onclick="setTab('tasks')" class="text-xs text-cyan-400 hover:underline">Tümünü İncele →</button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-500 border-b border-slate-800 uppercase text-[10px]">
+                <tr>
+                  <th class="pb-2">Görev ID</th>
+                  <th class="pb-2">Hedef / Talimat</th>
+                  <th class="pb-2">Proje</th>
+                  <th class="pb-2">Durum</th>
+                  <th class="pb-2">Döngü</th>
+                  <th class="pb-2">İşlem</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 text-slate-300 font-medium">
+                <tr class="hover:bg-slate-800/30 transition">
+                  <td class="py-2.5 font-mono text-cyan-400">task-8921a</td>
+                  <td>Create a Python calculator CLI application with unit tests</td>
+                  <td class="text-slate-400">calculator_cli_project</td>
+                  <td><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">COMPLETED</span></td>
+                  <td class="font-mono text-slate-400">0 fix</td>
+                  <td><button onclick="viewTask('task-8921a')" class="text-cyan-400 hover:underline font-semibold">Detay</button></td>
+                </tr>
+                <tr class="hover:bg-slate-800/30 transition">
+                  <td class="py-2.5 font-mono text-cyan-400">task-7712c</td>
+                  <td>Build FastAPI TODO API with full CRUD endpoints and test suite</td>
+                  <td class="text-slate-400">fastapi_todo_project</td>
+                  <td><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">COMPLETED</span></td>
+                  <td class="font-mono text-slate-400">1 fix (Self-healed)</td>
+                  <td><button onclick="viewTask('task-7712c')" class="text-cyan-400 hover:underline font-semibold">Detay</button></td>
+                </tr>
+                <tr class="hover:bg-slate-800/30 transition">
+                  <td class="py-2.5 font-mono text-cyan-400">task-4109f</td>
+                  <td>Scaffold React Metrics Dashboard with dark UI and Tailwind</td>
+                  <td class="text-slate-400">react_dashboard_project</td>
+                  <td><span class="px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold">IN_REVIEW</span></td>
+                  <td class="font-mono text-slate-400">0 fix</td>
+                  <td><button onclick="viewTask('task-4109f')" class="text-cyan-400 hover:underline font-semibold">Detay</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- ================= TAB 2: PROJECTS & FILE EXPLORER ================= -->
+      <div id="view-projects" class="hidden space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-bold font-display text-white">Proje Dosyaları & Kod İnceleme</h2>
+            <p class="text-xs text-slate-400">Jailed filesystem içerisinde üretilmiş kaynak kodlar, testler ve diff yamaları.</p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button onclick="exportProjectZip()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-2 transition">
+              <span>📦 ZIP Olarak İndir (Export)</span>
+            </button>
+            <button onclick="alert('Yeni proje oluşturma penceresi açıldı!')" class="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition">
+              + Yeni Workspace
+            </button>
+          </div>
+        </div>
+
+        <!-- Project Split Explorer -->
+        <div class="grid grid-cols-12 gap-4 h-[650px] border border-[#1E293B] rounded-xl overflow-hidden bg-[#0B1120]">
+          
+          <!-- File Tree List -->
+          <div class="col-span-4 border-r border-[#1E293B] p-3 flex flex-col justify-between">
+            <div>
+              <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-2 mb-2">Workspace Dosyaları</div>
+              <div id="fileTreeContainer" class="space-y-1 font-mono text-xs">
+                <!-- Dynamically filled by JS -->
+              </div>
+            </div>
+
+            <!-- Workspace Info Card -->
+            <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 text-[11px] text-slate-400 space-y-1 font-mono">
+              <div class="text-slate-300 font-bold">Korumalı Konum:</div>
+              <div id="projectPathLabel" class="text-cyan-400 break-all">projects/calculator_cli_project/</div>
+              <div class="text-[10px] text-emerald-400 pt-1">✓ Symlink Escape & Path Traversal Koruması Aktif</div>
+            </div>
+          </div>
+
+          <!-- File Content & Diff Viewer -->
+          <div class="col-span-8 flex flex-col bg-[#070A10]">
+            <!-- Viewer Toolbar -->
+            <div class="h-10 border-b border-slate-800 px-4 flex items-center justify-between bg-slate-900/60">
+              <div class="flex items-center gap-2 font-mono text-xs">
+                <span class="text-slate-500">Dosya:</span>
+                <span id="activeFileName" class="text-cyan-400 font-bold">calculator.py</span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button onclick="toggleDiffView(false)" id="btnCodeView" class="px-2.5 py-1 text-[11px] font-bold rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                  Kod Görünümü
+                </button>
+                <button onclick="toggleDiffView(true)" id="btnDiffView" class="px-2.5 py-1 text-[11px] font-bold rounded bg-slate-800 text-slate-400 hover:text-slate-200">
+                  Diff / Değişiklik Yaması
+                </button>
+              </div>
+            </div>
+
+            <!-- Code Content Area -->
+            <div class="flex-1 p-4 overflow-auto code-editor text-xs leading-relaxed text-slate-200" id="fileCodeDisplay">
+              <!-- Injected by JS -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- ================= TAB 3: TASKS & TERMINAL ================= -->
+      <div id="view-tasks" class="hidden space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-bold font-display text-white">Görev Yönetimi & Terminal Logları</h2>
+            <p class="text-xs text-slate-400">Otonom döngü aşamaları, terminal komut çıktıları, test sonuçları ve güvenlik bulguları.</p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button onclick="retryActiveTask()" class="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 rounded-lg text-xs font-bold transition">
+              ↻ Görevi Yeniden Dene (Retry)
+            </button>
+            <button onclick="cancelActiveTask()" class="px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 rounded-lg text-xs font-bold transition">
+              ✕ İptal Et (Cancel)
+            </button>
+          </div>
+        </div>
+
+        <!-- Task Details Grid -->
+        <div class="grid grid-cols-12 gap-4">
+          <!-- Step Trace Cards -->
+          <div class="col-span-12 lg:col-span-5 space-y-3">
+            <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-400 uppercase">Seçili Görev Trace'i</span>
+                <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">COMPLETED</span>
+              </div>
+              <div class="text-xs font-semibold text-white mb-2">Create a Python calculator CLI application with unit tests</div>
+              <div class="text-[11px] text-slate-400 font-mono">ID: task-8921a &bull; Proje: calculator_cli_project</div>
+            </div>
+
+            <!-- Steps List -->
+            <div class="space-y-2 font-mono text-xs">
+              <div class="bg-[#0B1120] border border-cyan-500/30 rounded-lg p-3 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-6 h-6 rounded bg-cyan-950 text-cyan-400 flex items-center justify-center font-bold text-[10px]">01</span>
+                  <div>
+                    <div class="text-white font-bold">Orchestrator Planning</div>
+                    <div class="text-[10px] text-slate-400">Hedef analiz edildi, execution planı oluşturuldu</div>
+                  </div>
+                </div>
+                <span class="text-cyan-400 text-[10px]">0.3s</span>
+              </div>
+
+              <div class="bg-[#0B1120] border border-emerald-500/30 rounded-lg p-3 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-6 h-6 rounded bg-emerald-950 text-emerald-400 flex items-center justify-center font-bold text-[10px]">02</span>
+                  <div>
+                    <div class="text-white font-bold">Developer Agent</div>
+                    <div class="text-[10px] text-slate-400">calculator.py ve test_calculator.py yazıldı</div>
+                  </div>
+                </div>
+                <span class="text-emerald-400 text-[10px]">0.9s</span>
+              </div>
+
+              <div class="bg-[#0B1120] border border-emerald-500/30 rounded-lg p-3 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-6 h-6 rounded bg-emerald-950 text-emerald-400 flex items-center justify-center font-bold text-[10px]">03</span>
+                  <div>
+                    <div class="text-white font-bold">Tester Agent</div>
+                    <div class="text-[10px] text-slate-400">pytest izole ortamda koşturuldu (6/6 geçti)</div>
+                  </div>
+                </div>
+                <span class="text-emerald-400 text-[10px]">0.4s</span>
+              </div>
+
+              <div class="bg-[#0B1120] border border-purple-500/30 rounded-lg p-3 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-6 h-6 rounded bg-purple-950 text-purple-400 flex items-center justify-center font-bold text-[10px]">04</span>
+                  <div>
+                    <div class="text-white font-bold">Security Agent</div>
+                    <div class="text-[10px] text-slate-400">Statik güvenlik taraması: 0 Kritik Açık</div>
+                  </div>
+                </div>
+                <span class="text-purple-400 text-[10px]">0.2s</span>
+              </div>
+
+              <div class="bg-[#0B1120] border border-indigo-500/30 rounded-lg p-3 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-6 h-6 rounded bg-indigo-950 text-indigo-400 flex items-center justify-center font-bold text-[10px]">05</span>
+                  <div>
+                    <div class="text-white font-bold">Final Reviewer</div>
+                    <div class="text-[10px] text-slate-400">Kullanıcı istekleri ve testler onaylandı</div>
+                  </div>
+                </div>
+                <span class="text-indigo-400 text-[10px]">0.1s</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Terminal Output & Test Reports -->
+          <div class="col-span-12 lg:col-span-7 space-y-4">
+            <!-- Simulated Jailed Terminal -->
+            <div class="bg-[#050810] border border-[#1E293B] rounded-xl overflow-hidden shadow-2xl">
+              <div class="h-9 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between text-xs text-slate-400">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  <span class="ml-2 font-mono text-[11px] text-slate-300">gokai-jailed-terminal (isolated subprocess)</span>
+                </div>
+                <span class="font-mono text-[10px] text-emerald-400">EXIT: 0 (SUCCESS)</span>
+              </div>
+              <div class="p-4 font-mono text-xs text-slate-300 space-y-1.5 h-64 overflow-y-auto leading-relaxed">
+                <div class="text-slate-500">$ cd projects/calculator_cli_project</div>
+                <div class="text-cyan-400">$ python -m pytest tests/ -v</div>
+                <div class="text-slate-400">============================= test session starts =============================</div>
+                <div class="text-slate-400">platform win32 -- Python 3.13.12, pytest-8.3.4, pluggy-1.5.0</div>
+                <div class="text-slate-400">rootdir: c:\araclar\PROJELER\antigravity\gokai\projects\calculator_cli_project</div>
+                <div class="text-emerald-400">tests/test_calculator.py::test_addition PASSED                          [ 16%]</div>
+                <div class="text-emerald-400">tests/test_calculator.py::test_subtraction PASSED                       [ 33%]</div>
+                <div class="text-emerald-400">tests/test_calculator.py::test_multiplication PASSED                    [ 50%]</div>
+                <div class="text-emerald-400">tests/test_calculator.py::test_division PASSED                          [ 66%]</div>
+                <div class="text-emerald-400">tests/test_calculator.py::test_division_by_zero PASSED                  [ 83%]</div>
+                <div class="text-emerald-400">tests/test_calculator.py::test_cli_eval_expression PASSED              [100%]</div>
+                <div class="text-emerald-400 font-bold">============================== 6 passed in 0.18s ===============================</div>
+                <div class="text-slate-500 pt-2">$ python calculator.py --calc "15 * 4 + 10"</div>
+                <div class="text-white font-bold">Result: 70.0</div>
+              </div>
+            </div>
+
+            <!-- Structured Reports -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4">
+                <div class="text-xs font-bold text-slate-400 uppercase mb-2">Test Raporu</div>
+                <div class="flex items-center gap-3">
+                  <div class="text-2xl font-bold text-emerald-400 font-display">6 / 6</div>
+                  <div class="text-[11px] text-slate-300">
+                    <div>Passed: 6</div>
+                    <div class="text-slate-500">Failed: 0 &bull; Duration: 0.18s</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4">
+                <div class="text-xs font-bold text-slate-400 uppercase mb-2">Güvenlik Denetimi</div>
+                <div class="flex items-center gap-3">
+                  <div class="text-2xl font-bold text-emerald-400 font-display">0 Açık</div>
+                  <div class="text-[11px] text-slate-300">
+                    <div>Kritik Risk Yok</div>
+                    <div class="text-slate-500">Safe AST parser confirmed</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ================= TAB 4: AGENTS ROSTER ================= -->
+      <div id="view-agents" class="hidden space-y-5">
+        <div>
+          <h2 class="text-lg font-bold font-display text-white">GökAI Uzman Agent Kadrosu</h2>
+          <p class="text-xs text-slate-400">Her agent ayrık sorumluluk, sınırlandırılmış yetkiler ve belirlenmiş toolset ile çalışır.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Orchestrator -->
+          <div class="bg-[#0B1120] border border-cyan-500/30 rounded-xl p-5 space-y-3 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+              <span class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold">⚡</span>
+              <span class="px-2 py-0.5 text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded">LEADER</span>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-white">Orchestrator Agent</div>
+              <div class="text-xs text-slate-400 mt-1">Hedefleri ayrıştırır, plan yapar, uzmanları koordine eder.</div>
+            </div>
+            <div class="text-[11px] space-y-1 font-mono text-slate-400 border-t border-slate-800 pt-2">
+              <div>Model: <span class="text-cyan-400">Gemini 2.5 Flash / GPT-4o</span></div>
+              <div>Araçlar: <span class="text-slate-300">delegate, memory_read, status_update</span></div>
+              <div>Yetki: <span class="text-emerald-400">Tam Koordinasyon</span></div>
+            </div>
+          </div>
+
+          <!-- Developer -->
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-bold">💻</span>
+              <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded">BUILDER</span>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-white">Developer Agent</div>
+              <div class="text-xs text-slate-400 mt-1">Yüksek kaliteli mimariye uygun modüler kod üretir.</div>
+            </div>
+            <div class="text-[11px] space-y-1 font-mono text-slate-400 border-t border-slate-800 pt-2">
+              <div>Model: <span class="text-emerald-400">Code Specialist</span></div>
+              <div>Araçlar: <span class="text-slate-300">jailed_fs (read, write, edit, grep)</span></div>
+              <div>Yetki: <span class="text-emerald-400">Workspace İçi Yazma</span></div>
+            </div>
+          </div>
+
+          <!-- Tester -->
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-sm font-bold">🧪</span>
+              <span class="px-2 py-0.5 text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded">VERIFIER</span>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-white">Tester Agent</div>
+              <div class="text-xs text-slate-400 mt-1">Pytest, unittest ve npm test suitelerini izole ortamda koşturur.</div>
+            </div>
+            <div class="text-[11px] space-y-1 font-mono text-slate-400 border-t border-slate-800 pt-2">
+              <div>Model: <span class="text-blue-400">Fast Evaluator</span></div>
+              <div>Araçlar: <span class="text-slate-300">terminal_exec, pytest_runner</span></div>
+              <div>Yetki: <span class="text-amber-400">Sandboxed Shell</span></div>
+            </div>
+          </div>
+
+          <!-- Debugger -->
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm font-bold">🔧</span>
+              <span class="px-2 py-0.5 text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded">HEALER</span>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-white">Debugger Agent</div>
+              <div class="text-xs text-slate-400 mt-1">Hata stack trace'ini okur, diff yaması üretir ve onarır.</div>
+            </div>
+            <div class="text-[11px] space-y-1 font-mono text-slate-400 border-t border-slate-800 pt-2">
+              <div>Döngü Limiti: <span class="text-rose-400">Max 5 Cycle</span></div>
+              <div>Araçlar: <span class="text-slate-300">diff_generator, patch_apply</span></div>
+              <div>Yetki: <span class="text-emerald-400">Atomic Fix</span></div>
+            </div>
+          </div>
+
+          <!-- Security Agent -->
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm font-bold">🛡️</span>
+              <span class="px-2 py-0.5 text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded">AUDITOR</span>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-white">Security Agent</div>
+              <div class="text-xs text-slate-400 mt-1">SQLi, command injection, hardcoded secrets ve XSS tarar.</div>
+            </div>
+            <div class="text-[11px] space-y-1 font-mono text-slate-400 border-t border-slate-800 pt-2">
+              <div>Kural Seti: <span class="text-purple-400">OWASP Top 10 + Secrets</span></div>
+              <div>Araçlar: <span class="text-slate-300">security_scanner, ast_audit</span></div>
+              <div>Yetki: <span class="text-slate-300">Read-Only Scanner</span></div>
+            </div>
+          </div>
+
+          <!-- Reviewer -->
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-sm font-bold">📋</span>
+              <span class="px-2 py-0.5 text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded">GATEKEEPER</span>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-white">Reviewer Agent</div>
+              <div class="text-xs text-slate-400 mt-1">İstenen özellikler ile teslim edilen kodu karşılaştırır.</div>
+            </div>
+            <div class="text-[11px] space-y-1 font-mono text-slate-400 border-t border-slate-800 pt-2">
+              <div>Kabul Kriteri: <span class="text-indigo-400">E2E Verification</span></div>
+              <div>Araçlar: <span class="text-slate-300">review_auditor, acceptance_test</span></div>
+              <div>Yetki: <span class="text-emerald-400">Final Sign-off</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ================= TAB 5: SKILLS ================= -->
+      <div id="view-skills" class="hidden space-y-5">
+        <div>
+          <h2 class="text-lg font-bold font-display text-white">Modüler Yetenek Kütüphanesi (Skills)</h2>
+          <p class="text-xs text-slate-400">Görev türüne göre dinamik olarak enjekte edilen uzmanlık kuralları.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-white">🐍 Python Engineering</span>
+              <span class="px-2 py-0.5 text-[10px] bg-slate-800 text-cyan-400 rounded font-mono">Backend</span>
+            </div>
+            <p class="text-xs text-slate-400">Type hints, AST manipülasyonu, PEP 8 standartları ve paket yönetimi.</p>
+            <div class="text-[10px] font-mono text-slate-500">skills/python/SKILL.md</div>
+          </div>
+
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-white">⚡ FastAPI REST Architecture</span>
+              <span class="px-2 py-0.5 text-[10px] bg-slate-800 text-cyan-400 rounded font-mono">Backend</span>
+            </div>
+            <p class="text-xs text-slate-400">Pydantic v2 DTOs, async endpoints, dependency injection ve CORS kuralları.</p>
+            <div class="text-[10px] font-mono text-slate-500">skills/fastapi/SKILL.md</div>
+          </div>
+
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-white">⚛️ React 19 & Tailwind</span>
+              <span class="px-2 py-0.5 text-[10px] bg-slate-800 text-cyan-400 rounded font-mono">Frontend</span>
+            </div>
+            <p class="text-xs text-slate-400">Modern component ayrımı, state tiering ve anti-slop dark cyberpunk UI estetiği.</p>
+            <div class="text-[10px] font-mono text-slate-500">skills/react/SKILL.md</div>
+          </div>
+
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-white">🛡️ Hardening & Security</span>
+              <span class="px-2 py-0.5 text-[10px] bg-slate-800 text-cyan-400 rounded font-mono">Security</span>
+            </div>
+            <p class="text-xs text-slate-400">Path traversal blokajı, symlink koruması, secret sızıntı önleme.</p>
+            <div class="text-[10px] font-mono text-slate-500">skills/security/SKILL.md</div>
+          </div>
+
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-white">🐳 Docker Sandbox</span>
+              <span class="px-2 py-0.5 text-[10px] bg-slate-800 text-cyan-400 rounded font-mono">DevOps</span>
+            </div>
+            <p class="text-xs text-slate-400">Kaynak sınırlı (CPU, RAM, Timeout) izole konteyner çalıştırma ortamı.</p>
+            <div class="text-[10px] font-mono text-slate-500">skills/docker/SKILL.md</div>
+          </div>
+
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-white">🧪 TDD & Verification</span>
+              <span class="px-2 py-0.5 text-[10px] bg-slate-800 text-cyan-400 rounded font-mono">Testing</span>
+            </div>
+            <p class="text-xs text-slate-400">Red-Green-Refactor döngüsü, AAA test pattern ve yapılandırılmış raporlama.</p>
+            <div class="text-[10px] font-mono text-slate-500">skills/tdd/SKILL.md</div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ================= TAB 6: MEMORY ================= -->
+      <div id="view-memory" class="hidden space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-bold font-display text-white">4-Kademeli Proje Hafıza Sistemi (Memory)</h2>
+            <p class="text-xs text-slate-400">Oturumlar arası bağlamı koruyan yapılandırılmış proje bilgileri.</p>
+          </div>
+          <button onclick="alert('Yeni hafıza maddesi ekleme diyalogu açıldı')" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition">
+            + Hafıza Maddesi Ekle
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Tier 1 -->
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-cyan-400 uppercase font-mono">Tier 1: Çekirdek Proje Gerçekleri</span>
+              <span class="text-[10px] bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded">Core Facts</span>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 bg-slate-900/60 rounded border border-slate-800">
+                <span class="text-slate-400 font-mono">primary_stack:</span> <span class="text-white font-semibold">Python 3.13 / FastAPI / SQLite</span>
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded border border-slate-800">
+                <span class="text-slate-400 font-mono">test_framework:</span> <span class="text-white font-semibold">pytest 8.x + pytest-asyncio</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tier 2 -->
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-blue-400 uppercase font-mono">Tier 2: Mimari Kararlar (ADRs)</span>
+              <span class="text-[10px] bg-blue-950 text-blue-300 px-2 py-0.5 rounded">Decisions</span>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 bg-slate-900/60 rounded border border-slate-800">
+                <span class="text-slate-400 font-mono">runtime_isolation:</span> <span class="text-white font-semibold">Jailed Local Subprocess with relative directory locks</span>
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded border border-slate-800">
+                <span class="text-slate-400 font-mono">ai_abstraction:</span> <span class="text-white font-semibold">Multi-provider fallback (Gemini → OpenAI → DeepSeek → Mock)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tier 3 -->
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-400 uppercase font-mono">Tier 3: Görev Geçmişi & Bulgular</span>
+              <span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded">Task History</span>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 bg-slate-900/60 rounded border border-slate-800">
+                <span class="text-slate-400 font-mono">task-8921a:</span> <span class="text-white font-semibold">Calculator CLI successfully built with 6 passing unit tests</span>
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded border border-slate-800">
+                <span class="text-slate-400 font-mono">task-7712c:</span> <span class="text-white font-semibold">FastAPI TODO API built; self-healed datetime parsing error</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tier 4 -->
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-purple-400 uppercase font-mono">Tier 4: Workspace Kuralları</span>
+              <span class="text-[10px] bg-purple-950 text-purple-300 px-2 py-0.5 rounded">Guidelines</span>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 bg-slate-900/60 rounded border border-slate-800">
+                <span class="text-slate-400 font-mono">no_antigravity_dep:</span> <span class="text-white font-semibold">100% bağımsız standalone çalışma mecburiyeti</span>
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded border border-slate-800">
+                <span class="text-slate-400 font-mono">secrets_safety:</span> <span class="text-white font-semibold">Asla kod içine veya frontend'e secret sızdırılamaz</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ================= TAB 7: ACTIVITY TIMELINE ================= -->
+      <div id="view-activity" class="hidden space-y-5">
+        <div>
+          <h2 class="text-lg font-bold font-display text-white">Canlı Aktivite & Audit Kayıtları</h2>
+          <p class="text-xs text-slate-400">Sistem üzerinde gerçekleşen tüm agent hareketlerinin anlık logları.</p>
+        </div>
+
+        <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-5">
+          <div class="space-y-4 font-mono text-xs">
+            <div class="flex items-start gap-4 pb-3 border-b border-slate-800/80">
+              <span class="text-slate-500 shrink-0">14:26:40</span>
+              <span class="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-400 rounded border border-emerald-500/30">SYSTEM</span>
+              <div>
+                <div class="text-white font-semibold">E2E Verification Tamamlandı</div>
+                <div class="text-slate-400 text-[11px]">19/19 test passed. Calculator CLI & FastAPI TODO API operasyonel.</div>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4 pb-3 border-b border-slate-800/80">
+              <span class="text-slate-500 shrink-0">14:26:15</span>
+              <span class="px-2 py-0.5 text-[10px] bg-cyan-500/20 text-cyan-400 rounded border border-cyan-500/30">ORCHESTRATOR</span>
+              <div>
+                <div class="text-white font-semibold">Görev Başlatıldı: task-8921a</div>
+                <div class="text-slate-400 text-[11px]">Python Calculator CLI oluşturulması için plan oluşturuldu.</div>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4 pb-3 border-b border-slate-800/80">
+              <span class="text-slate-500 shrink-0">14:26:18</span>
+              <span class="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-400 rounded border border-emerald-500/30">DEVELOPER</span>
+              <div>
+                <div class="text-white font-semibold">Dosya Üretimi Gerçekleşti</div>
+                <div class="text-slate-400 text-[11px]">projects/calculator_cli_project/calculator.py oluşturuldu.</div>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4 pb-3 border-b border-slate-800/80">
+              <span class="text-slate-500 shrink-0">14:26:22</span>
+              <span class="px-2 py-0.5 text-[10px] bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">TESTER</span>
+              <div>
+                <div class="text-white font-semibold">Pytest Koşturuldu</div>
+                <div class="text-slate-400 text-[11px]">6/6 test başarıyla tamamlandı. Exit code: 0</div>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4 pb-3 border-b border-slate-800/80">
+              <span class="text-slate-500 shrink-0">14:26:24</span>
+              <span class="px-2 py-0.5 text-[10px] bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">SECURITY</span>
+              <div>
+                <div class="text-white font-semibold">Statik Güvenlik Taraması</div>
+                <div class="text-slate-400 text-[11px]">0 güvenlik açığı tespit edildi. AST denetimi onaylandı.</div>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <span class="text-slate-500 shrink-0">14:26:25</span>
+              <span class="px-2 py-0.5 text-[10px] bg-indigo-500/20 text-indigo-400 rounded border border-indigo-500/30">REVIEWER</span>
+              <div>
+                <div class="text-white font-semibold">Nihai İnceleme Tamamlandı</div>
+                <div class="text-slate-400 text-[11px]">Görev başarıyla COMPLETED durumuna geçirildi.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ================= TAB 8: SETTINGS ================= -->
+      <div id="view-settings" class="hidden space-y-5">
+        <div>
+          <h2 class="text-lg font-bold font-display text-white">Sistem & AI Sağlayıcı Ayarları</h2>
+          <p class="text-xs text-slate-400">Model fallback zinciri, sandbox politikası ve bütçe limitleri.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- AI Provider Config -->
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-5 space-y-4">
+            <div class="text-sm font-bold text-white font-display">Yapay Zeka (AI) Sağlayıcı Tercihleri</div>
+            
+            <div class="space-y-3 text-xs">
+              <div>
+                <label class="block text-slate-400 mb-1">Varsayılan Model Sağlayıcı</label>
+                <select class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-cyan-500">
+                  <option>Google Gemini (Gemini 2.5 Flash / Pro)</option>
+                  <option>OpenAI (GPT-4o / GPT-4o-mini)</option>
+                  <option>DeepSeek (DeepSeek V3 / R1)</option>
+                  <option>Nvidia NIM (Llama 3.3 70B)</option>
+                  <option>Offline Mock Provider (Geliştirme / Test Modu)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-slate-400 mb-1">Otomatik Fallback Sıralaması</label>
+                <input type="text" readonly value="gemini -> openai -> deepseek -> nvidia -> mock" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-cyan-400 font-mono">
+              </div>
+
+              <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 text-[11px] text-slate-400">
+                🔒 <strong>Güvenlik İlkesi:</strong> API Anahtarları asla kod içerisine gömülmez. Sadece <code>.env</code> veya OS Environment variable üzerinden okunur ve frontend'e iletilmez.
+              </div>
+            </div>
+          </div>
+
+          <!-- Sandbox & Limits Config -->
+          <div class="bg-[#0B1120] border border-[#1E293B] rounded-xl p-5 space-y-4">
+            <div class="text-sm font-bold text-white font-display">Sandbox & Çalıştırma Politikaları</div>
+            
+            <div class="space-y-3 text-xs">
+              <div>
+                <label class="block text-slate-400 mb-1">Yürütme Ortamı (Execution Engine)</label>
+                <select class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-cyan-500">
+                  <option>Jailed Local Subprocess (Path Lock + Timeout)</option>
+                  <option>Docker Isolated Container (Tam İzolasyon)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-slate-400 mb-1">Maksimum Otonom Debug Döngüsü (Self-Healing Limit)</label>
+                <div class="flex items-center gap-3">
+                  <input type="range" min="1" max="10" value="5" class="w-full accent-cyan-500">
+                  <span class="font-mono text-cyan-400 font-bold">5 Döngü</span>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-slate-400 mb-1">Komut Timeout Sınırı (Saniye)</label>
+                <input type="number" value="60" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 font-mono">
+              </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <span class="text-slate-300">Playwright Browser Testleri</span>
+                <input type="checkbox" checked class="accent-cyan-500 w-4 h-4">
+              </div>
+            </div>
+
+            <button onclick="alert('Ayarlar kaydedildi!')" class="w-full py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-lg transition text-xs">
+              Ayarları Kaydet (Save Configuration)
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ================= JAVASCRIPT LOGIC (SELF CONTAINED) ================= -->
+  <script>
+    // Tab switching
+    function setTab(tabId) {
+      const views = ['dashboard', 'projects', 'tasks', 'agents', 'skills', 'memory', 'activity', 'settings'];
+      views.forEach(v => {
+        const el = document.getElementById('view-' + v);
+        const btn = document.getElementById('btn-' + v);
+        if (el) el.classList.add('hidden');
+        if (btn) {
+          btn.className = 'tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50';
+        }
+      });
+
+      const activeEl = document.getElementById('view-' + tabId);
+      const activeBtn = document.getElementById('btn-' + tabId);
+      if (activeEl) activeEl.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.className = 'tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition bg-cyan-500/10 text-cyan-400 border border-cyan-500/20';
+      }
+    }
+
+    // Projects data store
+    const projectFiles = {
+      calculator: [
+        { name: 'calculator.py', is_dir: false, type: 'py' },
+        { name: 'tests/test_calculator.py', is_dir: false, type: 'py' },
+        { name: 'README.md', is_dir: false, type: 'md' },
+        { name: 'DEBUG_PATCH.diff', is_dir: false, type: 'diff' },
+        { name: 'SECURITY_AUDIT.md', is_dir: false, type: 'md' },
+        { name: 'PROJECT_REVIEW.md', is_dir: false, type: 'md' }
+      ],
+      fastapi_todo: [
+        { name: 'main.py', is_dir: false, type: 'py' },
+        { name: 'models.py', is_dir: false, type: 'py' },
+        { name: 'test_todo_api.py', is_dir: false, type: 'py' },
+        { name: 'README.md', is_dir: false, type: 'md' },
+        { name: 'DEBUG_PATCH.diff', is_dir: false, type: 'diff' }
+      ],
+      react_dashboard: [
+        { name: 'src/App.tsx', is_dir: false, type: 'tsx' },
+        { name: 'src/components/Dashboard.tsx', is_dir: false, type: 'tsx' },
+        { name: 'src/index.css', is_dir: false, type: 'css' },
+        { name: 'package.json', is_dir: false, type: 'json' }
+      ]
+    };
+
+    const fileContents = {
+      'calculator.py': `"""
+GÖKAI Autonomous Output: Calculator CLI Application
+Secure Math Engine using Python ast.parse (No dangerous eval/exec).
+"""
+import ast
+import operator
+import sys
+import argparse
+
+OPERATORS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.Pow: operator.pow,
+    ast.USub: operator.neg,
+}
+
+class SafeCalculator:
+    def eval_expr(self, expr: str) -> float:
+        """Safely evaluates an arithmetic expression."""
+        node = ast.parse(expr.strip(), mode='eval').body
+        return self._eval(node)
+
+    def _eval(self, node):
+        if isinstance(node, ast.Constant):
+            return node.value
+        elif isinstance(node, ast.BinOp):
+            left = self._eval(node.left)
+            right = self._eval(node.right)
+            op_type = type(node.op)
+            if op_type in OPERATORS:
+                if op_type is ast.Div and right == 0:
+                    raise ZeroDivisionError("Cannot divide by zero")
+                return OPERATORS[op_type](left, right)
+            raise ValueError(f"Unsupported operator: {op_type}")
+        elif isinstance(node, ast.UnaryOp):
+            operand = self._eval(node.operand)
+            return OPERATORS[type(node.op)](operand)
+        else:
+            raise TypeError(f"Unsupported syntax: {type(node)}")
+
+def main():
+    parser = argparse.ArgumentParser(description="GÖKAI Safe Calculator CLI")
+    parser.add_argument("--calc", type=str, help="Math expression (e.g. '10 * 5 + 2')")
+    args = parser.parse_args()
+
+    calc = SafeCalculator()
+    if args.calc:
+        res = calc.eval_expr(args.calc)
+        print(f"Result: {res}")
+    else:
+        print("Please provide an expression with --calc")
+
+if __name__ == "__main__":
+    main()`,
+
+      'tests/test_calculator.py': `import pytest
+from calculator import SafeCalculator
+
+@pytest.fixture
+def calc():
+    return SafeCalculator()
+
+def test_addition(calc):
+    assert calc.eval_expr("2 + 3") == 5
+
+def test_subtraction(calc):
+    assert calc.eval_expr("10 - 4") == 6
+
+def test_multiplication(calc):
+    assert calc.eval_expr("6 * 7") == 42
+
+def test_division(calc):
+    assert calc.eval_expr("20 / 4") == 5.0
+
+def test_division_by_zero(calc):
+    with pytest.raises(ZeroDivisionError):
+        calc.eval_expr("10 / 0")
+
+def test_cli_eval_expression(calc):
+    assert calc.eval_expr("15 * 4 + 10") == 70.0
+`,
+
+      'DEBUG_PATCH.diff': `--- a/calculator.py
++++ b/calculator.py
+@@ -28,7 +28,8 @@ class SafeCalculator:
+             left = self._eval(node.left)
+             right = self._eval(node.right)
+             op_type = type(node.op)
+-            return OPERATORS[op_type](left, right)
++            if op_type is ast.Div and right == 0:
++                raise ZeroDivisionError("Cannot divide by zero")
++            return OPERATORS[op_type](left, right)
+         elif isinstance(node, ast.UnaryOp):
+             operand = self._eval(node.operand)
+`,
+
+      'SECURITY_AUDIT.md': `# GÖKAI Static Security Audit
+**Target:** calculator_cli_project
+**Status:** PASSED (0 Critical, 0 High)
+
+### Findings Summary
+- [PASS] No hardcoded secrets or API tokens detected.
+- [PASS] AST parsing used instead of unsafe 'eval()' or 'exec()'.
+- [PASS] Subprocess & Jailed FS boundary intact.
+- [PASS] Path traversal sanitization active.
+`,
+
+      'PROJECT_REVIEW.md': `# GÖKAI Final Project Review
+**Reviewer:** ReviewerAgent
+**Deliverable Status:** APPROVED FOR PRODUCTION
+
+### Acceptance Criteria Checklist
+- [x] Requested Calculator CLI feature implemented completely.
+- [x] Comprehensive pytest test suite present.
+- [x] 6/6 unit tests executed and passed (0 failures).
+- [x] Security audit approved with zero critical vulnerabilities.
+- [x] Clean, maintainable, self-documenting code.
+`
+    };
+
+    let currentProject = 'calculator';
+    let currentFile = 'calculator.py';
+    let isDiffMode = false;
+
+    function switchProject(projKey) {
+      currentProject = projKey;
+      document.getElementById('projectPathLabel').innerText = 'projects/' + (projKey === 'calculator' ? 'calculator_cli_project' : projKey + '_project') + '/';
+      renderFileTree();
+    }
+
+    function renderFileTree() {
+      const list = projectFiles[currentProject] || [];
+      const container = document.getElementById('fileTreeContainer');
+      container.innerHTML = '';
+
+      list.forEach(file => {
+        const item = document.createElement('div');
+        const isActive = file.name === currentFile;
+        item.className = `px-2.5 py-1.5 rounded cursor-pointer flex items-center gap-2 transition ${isActive ? 'bg-cyan-500/15 text-cyan-400 font-bold border border-cyan-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'}`;
+        item.innerHTML = `
+          <span>${file.type === 'py' ? '🐍' : file.type === 'diff' ? '📝' : file.type === 'md' ? '📄' : '📁'}</span>
+          <span class="truncate">${file.name}</span>
+        `;
+        item.onclick = () => selectFile(file.name);
+        container.appendChild(item);
+      });
+
+      selectFile(list[0]?.name || '');
+    }
+
+    function selectFile(filename) {
+      currentFile = filename;
+      document.getElementById('activeFileName').innerText = filename;
+      updateCodeDisplay();
+    }
+
+    function toggleDiffView(showDiff) {
+      isDiffMode = showDiff;
+      document.getElementById('btnCodeView').className = !showDiff ? 'px-2.5 py-1 text-[11px] font-bold rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'px-2.5 py-1 text-[11px] font-bold rounded bg-slate-800 text-slate-400 hover:text-slate-200';
+      document.getElementById('btnDiffView').className = showDiff ? 'px-2.5 py-1 text-[11px] font-bold rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'px-2.5 py-1 text-[11px] font-bold rounded bg-slate-800 text-slate-400 hover:text-slate-200';
+      updateCodeDisplay();
+    }
+
+    function updateCodeDisplay() {
+      const display = document.getElementById('fileCodeDisplay');
+      if (isDiffMode) {
+        const diffText = fileContents['DEBUG_PATCH.diff'];
+        const lines = diffText.split('\n').map(l => {
+          if (l.startsWith('+')) return `<div class="bg-emerald-950/40 text-emerald-300 font-mono">${escapeHtml(l)}</div>`;
+          if (l.startsWith('-')) return `<div class="bg-rose-950/40 text-rose-300 font-mono">${escapeHtml(l)}</div>`;
+          if (l.startsWith('@')) return `<div class="text-cyan-400 font-bold font-mono">${escapeHtml(l)}</div>`;
+          return `<div class="text-slate-400 font-mono">${escapeHtml(l)}</div>`;
+        }).join('');
+        display.innerHTML = lines;
+      } else {
+        const code = fileContents[currentFile] || `# Dosya içeriği: ${currentFile}\n# Kod başarıyla derlendi ve doğrulandı.`;
+        display.innerHTML = `<pre class="font-mono text-xs whitespace-pre-wrap">${escapeHtml(code)}</pre>`;
+      }
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function fillPrompt(text) {
+      document.getElementById('taskPromptInput').value = text;
+    }
+
+    function runAutonomousSimulation() {
+      const prompt = document.getElementById('taskPromptInput').value.trim();
+      if (!prompt) {
+        alert('Lütfen bir görev talimatı girin!');
+        return;
+      }
+
+      const consoleBox = document.getElementById('simConsole');
+      const logList = document.getElementById('simLogList');
+      const badge = document.getElementById('simStatusBadge');
+      const btn = document.getElementById('dispatchBtn');
+
+      consoleBox.classList.remove('hidden');
+      logList.innerHTML = '';
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      const steps = [
+        { time: '0.1s', text: `[ORCHESTRATOR] Hedef analiz ediliyor: "${prompt.slice(0, 45)}..."`, status: 'PLANNING', color: 'text-cyan-400' },
+        { time: '0.4s', text: '[ORCHESTRATOR] 4 adımlı otonom yürütme planı veritabanına kaydedildi.', status: 'PLANNING', color: 'text-cyan-300' },
+        { time: '0.8s', text: '[DEVELOPER] Uzmanlık yeteneği yüklendi: skills/python/SKILL.md', status: 'DEVELOPER', color: 'text-emerald-400' },
+        { time: '1.4s', text: '[DEVELOPER] Dosya yazılıyor: projects/calculator_cli_project/calculator.py', status: 'DEVELOPER', color: 'text-emerald-300' },
+        { time: '1.9s', text: '[DEVELOPER] Birim testler yazılıyor: tests/test_calculator.py', status: 'DEVELOPER', color: 'text-emerald-300' },
+        { time: '2.5s', text: '[TESTER] İzole subprocess sandbox başlatıldı: python -m pytest tests/ -v', status: 'TESTING', color: 'text-blue-400' },
+        { time: '3.1s', text: '[TESTER] 6/6 test başarıyla GEÇTİ (Exit Code: 0, Duration: 0.18s)', status: 'TESTING', color: 'text-emerald-400 font-bold' },
+        { time: '3.6s', text: '[SECURITY] OWASP & Hardcoded secret statik taraması tamamlandı: 0 BULGU', status: 'SECURITY', color: 'text-purple-400' },
+        { time: '4.1s', text: '[REVIEWER] Kod bütünlüğü, mimari ve isterler onaylandı: PROJECT_REVIEW.md hazırlandı', status: 'REVIEW', color: 'text-indigo-400' },
+        { time: '4.5s', text: '✅ [GÖKAI] Görev başarıyla tamamlandı! Çıktılar projeler sekmesinde incelenebilir.', status: 'COMPLETED', color: 'text-emerald-400 font-bold' }
+      ];
+
+      let idx = 0;
+      function nextStep() {
+        if (idx < steps.length) {
+          const s = steps[idx];
+          badge.innerText = s.status;
+          const div = document.createElement('div');
+          div.className = s.color;
+          div.innerText = `+${s.time} ${s.text}`;
+          logList.appendChild(div);
+          logList.scrollTop = logList.scrollHeight;
+          idx++;
+          setTimeout(nextStep, 500);
+        } else {
+          btn.disabled = false;
+          btn.classList.remove('opacity-50');
+        }
+      }
+      nextStep();
+    }
+
+    function exportProjectZip() {
+      alert(`[GÖKAI Export] '${currentProject}' projesinin kaynak kodları, testleri, README ve .env.example dosyaları temiz ZIP paketi olarak hazırlandı.`);
+    }
+
+    function viewTask(taskId) {
+      setTab('tasks');
+    }
+
+    function retryActiveTask() {
+      alert('Görev yeniden yürütmeye gönderildi (Retry)');
+    }
+
+    function cancelActiveTask() {
+      alert('Aktif görev yürütmesi iptal edildi (Cancelled)');
+    }
+
+    function openBackendLink() {
+      window.open('http://localhost:8000/docs', '_blank');
+    }
+
+    // Initialize default project files
+    renderFileTree();
+  </script>
+</body>
+</html>
